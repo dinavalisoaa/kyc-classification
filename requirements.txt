@@ -1,0 +1,9 @@
+Flask
+tensorflow-cpu>=2.16
+numpy
+Pillow
+matplotlib
+scikit-learn
+pymupdf
+requests
+gunicorn

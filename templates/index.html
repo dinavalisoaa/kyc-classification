@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Télécharger une Image</title>
+</head>
+<body>
+    <h1>Télécharger une Image pour Prédiction</h1>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <label for="file">Choisir une image ou un PDF :</label>
+        <input type="file" name="file" id="file" accept=".jpg,.jpeg,.png,.pdf" required>
+        <br><br>
+        <label for="target_class">Vérifier un type précis (optionnel) :</label>
+        <select name="target_class" id="target_class">
+            <option value="">-- Laisser le modèle deviner --</option>
+            {% for classe in classes %}
+                <option value="{{ classe }}">{{ classe }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <input type="submit" value="Télécharger">
+    </form>
+
+    <hr>
+    <p>
+        <button type="button" id="retrain_btn">Rafraîchir le modèle</button>
+        (synchronise les nouveaux documents papi et ré-entraîne/déploie le modèle si l'accuracy ne régresse pas)
+    </p>
+    <pre id="retrain_status"></pre>
+
+    <script>
+        document.getElementById('retrain_btn').addEventListener('click', async () => {
+            const status = document.getElementById('retrain_status');
+            status.textContent = 'Lancement...';
+            try {
+                const resp = await fetch('/retrain', { method: 'POST' });
+                const data = await resp.json();
+                status.textContent = resp.status + ' ' + JSON.stringify(data, null, 2);
+            } catch (e) {
+                status.textContent = 'Erreur : ' + e;
+            }
+        });
+    </script>
+</body>
+</html>

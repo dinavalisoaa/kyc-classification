@@ -1,0 +1,41 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:7860"
+    environment:
+      - RELOAD_TOKEN=${RELOAD_TOKEN:-change-me}
+      - APP_RELOAD_URL=http://localhost:7860/internal/reload
+      - PAPI_API_URL=${PAPI_API_URL:-}
+      - PAPI_API_TOKEN=${PAPI_API_TOKEN:-}
+      - PAPI_CDN_BASE=${PAPI_CDN_BASE:-https://cdn.papi.mg}
+    volumes:
+      - ./model.keras:/app/model.keras
+      - ./class_names.json:/app/class_names.json
+      - ./models:/app/models
+      - ./uploads:/app/uploads
+      - ./cin-data:/app/cin-data
+      - ./data:/app/data
+      - ./documents.db:/app/documents.db
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  retrain:
+    build: .
+    entrypoint: ["sh", "retrain_loop.sh"]
+    environment:
+      - RETRAIN_INTERVAL_SECONDS=${RETRAIN_INTERVAL_SECONDS:-86400}
+      - APP_RELOAD_URL=http://app:7860/internal/reload
+      - RELOAD_TOKEN=${RELOAD_TOKEN:-change-me}
+      - PAPI_API_URL=${PAPI_API_URL:-}
+      - PAPI_API_TOKEN=${PAPI_API_TOKEN:-}
+    volumes:
+      - ./cin-data:/app/cin-data
+      - ./data:/app/data
+      - ./model.keras:/app/model.keras
+      - ./class_names.json:/app/class_names.json
+      - ./models:/app/models
+      - ./documents.db:/app/documents.db
+    depends_on:
+      - app
+    restart: unless-stopped

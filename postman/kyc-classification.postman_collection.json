@@ -1,0 +1,173 @@
+{
+  "info": {
+    "name": "KYC Classification API",
+    "description": "Tous les endpoints du service Flask de classification de documents KYC (web + API machine + internal admin).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:5000", "type": "string" },
+    { "key": "reload_token", "value": "change-me", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Web (navigateur)",
+      "item": [
+        {
+          "name": "GET / (formulaire upload)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "POST / (upload + prédiction, HTML)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Image (.jpg/.jpeg/.png) ou PDF" },
+                { "key": "target_class", "value": "cin", "type": "text", "description": "Optionnel : cin, cif, photo, residence, stat, statuts" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "GET /results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/results",
+              "host": ["{{base_url}}"],
+              "path": ["results"]
+            }
+          }
+        },
+        {
+          "name": "POST /retrain (bouton \"Rafraîchir le modèle\", sans auth)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "" },
+            "url": {
+              "raw": "{{base_url}}/retrain",
+              "host": ["{{base_url}}"],
+              "path": ["retrain"]
+            },
+            "description": "Lance training.retrain en tâche de fond (sync papi + entraînement + déploiement si pas de régression). Réponse immédiate 202 avec pid/log, ou 409 si un retrain/sync est déjà en cours."
+          }
+        }
+      ]
+    },
+    {
+      "name": "API machine (backend PAPI)",
+      "item": [
+        {
+          "name": "POST /api/classify",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Image (.jpg/.jpeg/.png) ou PDF" },
+                { "key": "target_class", "value": "cin", "type": "text", "description": "Optionnel : cin, cif, photo, residence, stat, statuts" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/classify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classify"]
+            },
+            "description": "Retourne predicted_class, confidence, revue_manuelle, class_confidences (+ match/message si target_class fourni)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internal (protégé par X-Reload-Token)",
+      "item": [
+        {
+          "name": "POST /internal/reload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Reload-Token", "value": "{{reload_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "" },
+            "url": {
+              "raw": "{{base_url}}/internal/reload",
+              "host": ["{{base_url}}"],
+              "path": ["internal", "reload"]
+            },
+            "description": "Recharge model.keras / class_names.json sans redémarrer le process."
+          }
+        },
+        {
+          "name": "POST /internal/sync-papi",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Reload-Token", "value": "{{reload_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "" },
+            "url": {
+              "raw": "{{base_url}}/internal/sync-papi",
+              "host": ["{{base_url}}"],
+              "path": ["internal", "sync-papi"]
+            },
+            "description": "Synchro papi immédiate (sans lancer de retrain). Retourne {ok, nouveaux, a_telecharger, telecharges, echecs, erreurs}."
+          }
+        },
+        {
+          "name": "POST /internal/retrain",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Reload-Token", "value": "{{reload_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"no_prepare\": false,\n  \"no_sync\": false,\n  \"force\": false,\n  \"tolerance\": 0.0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/internal/retrain",
+              "host": ["{{base_url}}"],
+              "path": ["internal", "retrain"]
+            },
+            "description": "Lance training.retrain en tâche de fond. Tous les champs du body sont optionnels (booléens no_prepare/no_sync/force, tolerance en float). Réponse 202 (démarré), 409 (déjà en cours), ou 400 (tolerance invalide)."
+          }
+        },
+        {
+          "name": "GET /internal/retrain/status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Reload-Token", "value": "{{reload_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/internal/retrain/status",
+              "host": ["{{base_url}}"],
+              "path": ["internal", "retrain", "status"]
+            },
+            "description": "Retourne {running, last_run, pid, started_at, log, returncode}."
+          }
+        }
+      ]
+    }
+  ]
+}

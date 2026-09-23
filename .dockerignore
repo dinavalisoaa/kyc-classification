@@ -1,0 +1,12 @@
+venv/
+env/
+data/
+cin-data/
+downloads/
+uploads/
+testImage/
+__pycache__/
+.git/
+.idea/
+*.pyc
+Claude outputs/

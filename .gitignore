@@ -1,0 +1,21 @@
+venv/
+env/
+__pycache__/
+*.pyc
+.idea/
+
+# KYC documents / training data : sensibles + volumineux, jamais versionnés.
+# cin-data/ = source brute ; data/kyc/ = régénéré via training/prepare_dataset.py.
+cin-data/
+data/
+downloads/
+uploads/
+testImage/
+
+# Snapshots de ré-entraînement (rollback local) : seul model.keras à la racine est déployé.
+models/
+
+logs/
+documents.db
+
+Claude outputs/

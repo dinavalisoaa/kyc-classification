@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Résultats de Prédiction</title>
+</head>
+<body>
+    <h1>Résultats de Prédiction</h1>
+    {% if results.target_class %}
+        {% if results.match %}
+        <p><strong style="color:#080">&#10003; Oui, c'est bien un {{ results.target_class }}</strong> à {{ '%.2f' % (results.confidence * 100) }}%</p>
+        {% else %}
+        <p><strong style="color:#b00">&#10007; Non, ce n'est pas un {{ results.target_class }}</strong> — c'est un {{ results.predicted_class }} à {{ '%.2f' % (results.confidence * 100) }}%</p>
+        {% endif %}
+    {% else %}
+    <p><strong>Classe Prédite :</strong> {{ results.predicted_class }}</p>
+    <p><strong>Confiance :</strong> {{ '%.2f' % (results.confidence * 100) }}%</p>
+    {% endif %}
+    {% if results.revue_manuelle %}
+    <p><strong style="color:#b00">&#9888; Revue manuelle requise</strong> (confiance faible ou document hors périmètre)</p>
+    {% else %}
+    <p><strong style="color:#080">&#10003; Décision automatique</strong></p>
+    {% endif %}
+    
+    <h2>Confiance par Classe</h2>
+    <ul>
+        {% for class_name, confidence in results.class_confidences.items() %}
+            <li><strong>{{ class_name }} :</strong> {{ '%.2f' % (confidence * 100) }}%</li>
+        {% endfor %}
+    </ul>
+    <a href="/">Télécharger une autre image</a>
+</body>
+</html>
