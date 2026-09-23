@@ -56,7 +56,7 @@ pip install -r requirements.txt
 ### Structure du Projet
 - **Entraînement du Modèle** :
   - `training/model_training.py` : Script pour construire, entraîner et évaluer le modèle.
-  - `data/train/` : Répertoire contenant les sous-dossiers pour chaque classe d'images.
+  - `data/kyc/train/` : Répertoire contenant les sous-dossiers pour chaque classe d'images.
   - `model.keras` : Modèle de machine learning pré-entraîné.
 
 - **Application Flask** :
@@ -157,7 +157,7 @@ print(results)
 
 ### Erreurs Courantes
 - **Entraînement du Modèle** :
-  - **Problème de Chargement des Données** : Assure-toi que les chemins vers les dossiers `data/train` et `data/val` sont corrects et que les images sont correctement organisées.
+  - **Problème de Chargement des Données** : Assure-toi que les chemins vers les dossiers `data/kyc/train` et `data/kyc/val` sont corrects et que les images sont correctement organisées.
   - **Problème d'Installation** : Vérifie les versions des bibliothèques et assure-toi qu'elles sont compatibles avec le script.
 
 - **Application Flask** :
@@ -188,7 +188,7 @@ Variables d'environnement (`.env` ou export avant `docker compose up`) :
 ### Appeler l'API
 
 ```bash
-curl -F file=@testImage/tulipe.jpg http://localhost:8000/api/classify
+curl -F file=@data/kyc/val/cin/<exemple>.jpg http://localhost:8000/api/classify
 ```
 
 Retourne un JSON avec `predicted_class`, `confidence`, `revue_manuelle` et `class_confidences` (voir `prediction.py`).

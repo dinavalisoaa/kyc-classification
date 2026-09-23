@@ -52,5 +52,6 @@ def predict_document(img_path, target_class=None):
 
 
 if __name__ == '__main__':
-    path = sys.argv[1] if len(sys.argv) > 1 else './testImage/tulipe.jpg'
-    print(predict_document(path))
+    if len(sys.argv) < 2:
+        sys.exit('Usage: python -m services.prediction <path/to/image_or_pdf>')
+    print(predict_document(sys.argv[1]))

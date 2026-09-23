@@ -4,13 +4,13 @@ __pycache__/
 *.pyc
 .idea/
 
-# KYC documents / training data : sensibles + volumineux, jamais versionnés.
-# cin-data/ = source brute ; data/kyc/ = régénéré via training/prepare_dataset.py.
+# cin-data/ = documents KYC bruts (source), sensibles : jamais versionnés.
+# data/kyc/ = dataset train/val dérivé : versionné (voir demande explicite).
+# data/externe/ = images Kaggle, régénérables via scripts/download_kaggle.py.
 cin-data/
-data/
+data/externe/
 downloads/
 uploads/
-testImage/
 
 # Snapshots de ré-entraînement (rollback local) : seul model.keras à la racine est déployé.
 models/

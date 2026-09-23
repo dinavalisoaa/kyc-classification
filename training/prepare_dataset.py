@@ -1,9 +1,15 @@
-"""Builds data/kyc/{train,val}/<class>/ from cin-data/ (+ 'autre' rejection class).
+"""Builds data/kyc/{train,val}/<class>/ from cin-data/.
 
 - PDFs are rendered as JPG (all pages up to MAX_PAGES).
 - The train/val split is done by GROUP (client/file) so that a given piece (e.g. the 6
   pages of one 'statuts' document) doesn't end up split between train and val.
 - Idempotent: the data/kyc folder is rebuilt on every run.
+
+NB: the 'autre' (rejection) class is NOT regenerated here anymore -- it used to be
+seeded from an old flower/gadget demo dataset (data/train/daisy, rose, headphone, ...),
+now removed. data/kyc/{train,val}/autre keeps whatever images are already there; a full
+rebuild (this script wipes and rebuilds TARGET_DIR) will leave 'autre' empty unless a new
+source of off-topic images is added back here.
 """
 import os
 import random
@@ -18,9 +24,6 @@ TARGET_DIR = 'data/kyc'
 SEED = 42
 VAL_RATIO = 0.2
 MAX_PAGES = 3          # max pages rendered per PDF
-OTHER_MAX = 120        # max images for the 'autre' rejection class
-OTHER_SOURCES = ['data/train/daisy', 'data/train/rose', 'data/train/headphone',
-                 'data/train/tulip', 'data/train/sunflower', 'data/train/dandelion']
 
 # cin-data folder -> class. Archives, Autres, Attestation, NIF, RCS: out of scope.
 MAPPING = {
@@ -92,20 +95,6 @@ def main():
                             path, os.path.join(TARGET_DIR, split, label), prefix)
                     except Exception as e:
                         print(f'SKIPPED {path}: {e}')
-
-    # 'autre' rejection class: off-topic images already present in the repo
-    other_images = [os.path.join(d, f) for d in OTHER_SOURCES if os.path.isdir(d)
-              for f in os.listdir(d) if os.path.splitext(f)[1].lower() in ALLOWED_EXTENSIONS]
-    rng.shuffle(other_images)
-    other_images = other_images[:OTHER_MAX]
-    n_val = round(len(other_images) * VAL_RATIO)
-    for i, path in enumerate(other_images):
-        split = 'val' if i < n_val else 'train'
-        try:
-            save_image(load_pil_image(path), os.path.join(TARGET_DIR, split, 'autre'), f'autre_{i}')
-            counts['autre'][split] += 1
-        except Exception as e:
-            print(f'SKIPPED {path}: {e}')
 
     # External images (Kaggle, see scripts/download_kaggle.py): train only
     external_dir = 'data/externe'
