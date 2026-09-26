@@ -1,3 +1,6 @@
+import os
+import re
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -12,21 +15,65 @@ TRAIN_DIR = 'data/kyc/train'
 VAL_DIR = 'data/kyc/val'
 
 
+SYNTHETIC_NAME = re.compile(r'^\d{4}_')   # generated images: 0000_xxx.jpg
+REAL_TARGET_SHARE = 0.3    # aim for real images ~30% of a class that mixes real + synthetic
+MAX_REAL_OVERSAMPLE = 10
+
+
+def oversampled_train_files(file_paths, class_names):
+    """Repeats the REAL images of classes that mix real and synthetic ones, so a handful
+    of real photos is not drowned by ~1000 clean synthetic composites. Classes with only
+    real or only synthetic images are left untouched."""
+    labels = [class_names.index(os.path.basename(os.path.dirname(p))) for p in file_paths]
+    is_real = [not SYNTHETIC_NAME.match(os.path.basename(p)) for p in file_paths]
+    factor = {}
+    for c in range(len(class_names)):
+        n_real = sum(1 for l, r in zip(labels, is_real) if l == c and r)
+        n_synth = sum(1 for l, r in zip(labels, is_real) if l == c and not r)
+        if n_real and n_synth:
+            wanted = REAL_TARGET_SHARE * n_synth / (1 - REAL_TARGET_SHARE)
+            factor[c] = int(min(MAX_REAL_OVERSAMPLE, max(1, round(wanted / n_real))))
+            print(f'  {class_names[c]}: {n_real} real x{factor[c]} + {n_synth} synthetic')
+    paths, out_labels = [], []
+    for p, l, r in zip(file_paths, labels, is_real):
+        k = factor.get(l, 1) if r else 1
+        paths += [p] * k
+        out_labels += [l] * k
+    return paths, out_labels
+
+
+def build_train_dataset(class_names, file_paths, img_height, img_width, batch_size):
+    paths, labels = oversampled_train_files(file_paths, class_names)
+
+    def load(path, label):
+        img = tf.io.decode_image(tf.io.read_file(path), channels=3, expand_animations=False)
+        img.set_shape([None, None, 3])
+        return tf.image.resize(img, (img_height, img_width)), label
+
+    ds = tf.data.Dataset.from_tensor_slices((paths, tf.constant(labels, tf.int32)))
+    ds = ds.shuffle(len(paths), seed=42, reshuffle_each_iteration=True)
+    return ds.map(load, num_parallel_calls=tf.data.AUTOTUNE).batch(batch_size), labels
+
+
 def prepare_datasets(img_height, img_width, batch_size):
     # Load the datasets (values 0-255: MobileNetV3 normalizes internally)
-    train_ds = tf.keras.utils.image_dataset_from_directory(
+    train_probe = tf.keras.utils.image_dataset_from_directory(
         TRAIN_DIR, image_size=(img_height, img_width), batch_size=batch_size,
-        shuffle=True, seed=42
+        shuffle=False
     )
     val_ds = tf.keras.utils.image_dataset_from_directory(
         VAL_DIR, image_size=(img_height, img_width), batch_size=batch_size,
         shuffle=False
     )
-    class_names = train_ds.class_names
+    class_names = train_probe.class_names
     assert class_names == val_ds.class_names, 'Different train/val classes'
 
+    # Training set: real images of mixed real/synthetic classes are oversampled
+    train_ds, train_labels = build_train_dataset(
+        class_names, train_probe.file_paths, img_height, img_width, batch_size)
+
     # Class weights to compensate for imbalance (autre >> cif/stat)
-    labels = np.concatenate([y.numpy() for _, y in train_ds])
+    labels = np.array(train_labels)
     counts = np.bincount(labels, minlength=len(class_names))
     class_weight = {i: len(labels) / (len(class_names) * c) for i, c in enumerate(counts)}
 

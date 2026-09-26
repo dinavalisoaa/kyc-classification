@@ -14,7 +14,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS documents (
     id INTEGER PRIMARY KEY,          -- id provided by the papi API
     path TEXT NOT NULL,              -- CDN path, e.g. /uploads/cin_xxx.jpg
-    type TEXT NOT NULL,              -- label: cin, photo, residence, statuts, cif, stat
+    type TEXT NOT NULL,              -- label: cin, photo, residence, statuts, cif, stat, permis, rcs
     client_id TEXT NOT NULL,         -- group for the train/val split
     split TEXT NOT NULL,             -- 'train' or 'val', assigned once per client_id
     local_path TEXT,                 -- local path once downloaded (NULL until then)

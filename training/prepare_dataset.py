@@ -3,13 +3,11 @@
 - PDFs are rendered as JPG (all pages up to MAX_PAGES).
 - The train/val split is done by GROUP (client/file) so that a given piece (e.g. the 6
   pages of one 'statuts' document) doesn't end up split between train and val.
-- Idempotent: the data/kyc folder is rebuilt on every run.
-
-NB: the 'autre' (rejection) class is NOT regenerated here anymore -- it used to be
-seeded from an old flower/gadget demo dataset (data/train/daisy, rose, headphone, ...),
-now removed. data/kyc/{train,val}/autre keeps whatever images are already there; a full
-rebuild (this script wipes and rebuilds TARGET_DIR) will leave 'autre' empty unless a new
-source of off-topic images is added back here.
+- Idempotent, but only for the classes it manages: only the train/val subfolders for
+  labels in MAPPING (plus data/externe/ classes) are wiped and rebuilt on every run.
+  Any other class folder already under data/kyc (e.g. manually/externally curated
+  classes such as 'permis', 'rcs', or the legacy 'autre' reject class) is left
+  untouched -- this script never deletes a class it doesn't know how to regenerate.
 """
 import os
 import random
@@ -79,9 +77,20 @@ def split_groups(groups, rng):
     return keys[n_val:], keys[:n_val]
 
 
+def managed_labels():
+    # Labels this script will regenerate: MAPPING targets + data/externe/ classes.
+    labels = set(MAPPING.values())
+    external_dir = 'data/externe'
+    if os.path.isdir(external_dir):
+        labels.update(os.listdir(external_dir))
+    return labels
+
+
 def main():
     rng = random.Random(SEED)
-    shutil.rmtree(TARGET_DIR, ignore_errors=True)
+    for label in managed_labels():
+        for split in ('train', 'val'):
+            shutil.rmtree(os.path.join(TARGET_DIR, split, label), ignore_errors=True)
     counts = defaultdict(lambda: {'train': 0, 'val': 0})
 
     for label, groups in collect_sources().items():

@@ -33,7 +33,7 @@
               "mode": "formdata",
               "formdata": [
                 { "key": "file", "type": "file", "src": "", "description": "Image (.jpg/.jpeg/.png) ou PDF" },
-                { "key": "target_class", "value": "cin", "type": "text", "description": "Optionnel : cin, cif, photo, residence, stat, statuts" }
+                { "key": "target_class", "value": "cin", "type": "text", "description": "Optionnel : cin, cif, permis, photo, rcs, residence, stat, statuts" }
               ]
             },
             "url": {
@@ -83,7 +83,7 @@
               "mode": "formdata",
               "formdata": [
                 { "key": "file", "type": "file", "src": "", "description": "Image (.jpg/.jpeg/.png) ou PDF" },
-                { "key": "target_class", "value": "cin", "type": "text", "description": "Optionnel : cin, cif, photo, residence, stat, statuts" }
+                { "key": "target_class", "value": "cin", "type": "text", "description": "Optionnel : cin, cif, permis, photo, rcs, residence, stat, statuts" }
               ]
             },
             "url": {
